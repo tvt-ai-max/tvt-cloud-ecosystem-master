@@ -5,7 +5,7 @@ set -euo pipefail
 # TVT Cloud Ecosystem — Health Check All Services
 # ============================================================
 
-BASE_URL="${API_BASE_URL:-http://localhost}"
+BASE_URL="${API_BASE_URL:-http://127.0.0.1:8090}"
 TIMEOUT=5
 PASS=0
 FAIL=0
@@ -47,12 +47,11 @@ echo ""
 printf "  %-15s %-40s %s\n" "SERVICE" "ENDPOINT" "STATUS"
 printf "  %-15s %-40s %s\n" "-------" "--------" "------"
 
-check_service "Gateway" "$BASE_URL/health" &
-check_service "Scanner" "$BASE_URL/scanner/health" &
-check_service "Billing" "$BASE_URL/billing/health" &
-check_service "Concierge" "$BASE_URL/concierge/health" &
-check_service "Review" "$BASE_URL/review/health" &
-wait
+check_service "Gateway" "$BASE_URL/health"
+check_service "Scanner" "$BASE_URL/scanner/health"
+check_service "Billing" "$BASE_URL/billing/health"
+check_service "Concierge" "$BASE_URL/concierge/health"
+check_service "Review" "$BASE_URL/review/health"
 
 check_redis
 

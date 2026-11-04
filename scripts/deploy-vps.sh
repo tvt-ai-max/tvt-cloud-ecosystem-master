@@ -6,7 +6,7 @@ set -euo pipefail
 # Target: KVM VPS 187.77.157.54 (HestiaCP + Docker Engine)
 # ============================================================
 
-DEPLOY_DIR="/opt/tvt-cloud-ecosystem"
+DEPLOY_DIR="${DEPLOY_DIR:-/home/tvtagency/tvt-cloud-ecosystem-master}"
 REPO_URL="https://github.com/tvt-ai-max/tvt-cloud-ecosystem-master.git"
 BRANCH="main"
 COMPOSE_FILE="docker-compose.yml"
@@ -35,9 +35,12 @@ if [ ! -f ".env.production" ]; then
     exit 1
 fi
 
-log "Building and starting containers..."
-docker compose -f "$COMPOSE_FILE" pull redis
-docker compose -f "$COMPOSE_FILE" build --parallel
+log "Building and starting containers sequentially with low CPU/IO priority..."
+docker compose -f "$COMPOSE_FILE" pull redis gateway
+for svc in scanner billing concierge review; do
+    log "Building $svc..."
+    nice -n 15 docker compose -f "$COMPOSE_FILE" build "$svc"
+done
 docker compose -f "$COMPOSE_FILE" up -d --remove-orphans
 
 log "Waiting for services to become healthy..."
