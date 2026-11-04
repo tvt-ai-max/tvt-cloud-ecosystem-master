@@ -1,0 +1,166 @@
+version: "3.8"
+
+services:
+  gateway:
+    image: nginx:1.25-alpine
+    container_name: tvt-gateway
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+    depends_on:
+      scanner:
+        condition: service_healthy
+      billing:
+        condition: service_healthy
+      concierge:
+        condition: service_healthy
+      review:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          memory: 100M
+    networks:
+      - tvt-net
+
+  scanner:
+    build:
+      context: https://github.com/tvt-ai-max/tvt-web-scanner-60s.git
+    container_name: tvt-scanner
+    restart: unless-stopped
+    expose:
+      - "3000"
+    env_file:
+      - .env.production
+    volumes:
+      - scanner-pdfs:/app/pdfs
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          memory: 800M
+    networks:
+      - tvt-net
+
+  billing:
+    build:
+      context: https://github.com/tvt-ai-max/tvt-vietqr-auto-billing.git
+    container_name: tvt-billing
+    restart: unless-stopped
+    expose:
+      - "3001"
+    env_file:
+      - .env.production
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    deploy:
+      resources:
+        limits:
+          memory: 250M
+    networks:
+      - tvt-net
+
+  concierge:
+    build:
+      context: https://github.com/tvt-ai-max/tvt-smart-concierge-rag.git
+    container_name: tvt-concierge
+    restart: unless-stopped
+    expose:
+      - "3002"
+    env_file:
+      - .env.production
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3002/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          memory: 350M
+    networks:
+      - tvt-net
+
+  review:
+    build:
+      context: https://github.com/tvt-ai-max/tvt-review-booster.git
+    container_name: tvt-review-booster
+    restart: unless-stopped
+    expose:
+      - "3003"
+    env_file:
+      - .env.production
+    volumes:
+      - review-data:/app/data
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3003/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    deploy:
+      resources:
+        limits:
+          memory: 200M
+    networks:
+      - tvt-net
+
+  redis:
+    image: redis:7-alpine
+    container_name: tvt-redis
+    restart: unless-stopped
+    expose:
+      - "6379"
+    command: redis-server --maxmemory 128mb --maxmemory-policy allkeys-lru --appendonly yes
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 15s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+    deploy:
+      resources:
+        limits:
+          memory: 150M
+    networks:
+      - tvt-net
+
+volumes:
+  scanner-pdfs:
+    driver: local
+  review-data:
+    driver: local
+  redis-data:
+    driver: local
+
+networks:
+  tvt-net:
+    driver: bridge
