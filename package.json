@@ -1,0 +1,21 @@
+{
+  "name": "tvt-cloud-ecosystem-master",
+  "version": "1.0.0",
+  "description": "Master production Docker Compose orchestration, Nginx reverse proxy gateway, and VPS deploy scripts for TVT Agency microservices ecosystem",
+  "scripts": {
+    "test": "node --test tests/*.test.js",
+    "healthcheck": "bash scripts/healthcheck-all.sh"
+  },
+  "keywords": [
+    "docker-compose",
+    "nginx-reverse-proxy",
+    "microservices",
+    "orchestration",
+    "tvt-agency"
+  ],
+  "author": "Nguyen Thanh Tung <tung@tvtagency.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "yaml": "^2.4.5"
+  }
+}
