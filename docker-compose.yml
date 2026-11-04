@@ -38,7 +38,7 @@ services:
 
   scanner:
     build:
-      context: https://github.com/tvt-ai-max/tvt-web-scanner-60s.git
+      context: ./services/tvt-web-scanner-60s
     container_name: tvt-scanner
     restart: unless-stopped
     security_opt:
@@ -67,7 +67,7 @@ services:
 
   billing:
     build:
-      context: https://github.com/tvt-ai-max/tvt-vietqr-auto-billing.git
+      context: ./services/tvt-vietqr-auto-billing
     container_name: tvt-billing
     restart: unless-stopped
     security_opt:
@@ -94,7 +94,7 @@ services:
 
   concierge:
     build:
-      context: https://github.com/tvt-ai-max/tvt-smart-concierge-rag.git
+      context: ./services/tvt-smart-concierge-rag
     container_name: tvt-concierge
     restart: unless-stopped
     security_opt:
@@ -124,7 +124,7 @@ services:
 
   review:
     build:
-      context: https://github.com/tvt-ai-max/tvt-review-booster.git
+      context: ./services/tvt-review-booster
     container_name: tvt-review-booster
     restart: unless-stopped
     security_opt:

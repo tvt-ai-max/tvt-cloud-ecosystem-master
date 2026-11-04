@@ -29,6 +29,18 @@ fi
 
 cd "$DEPLOY_DIR"
 
+mkdir -p services
+for repo in tvt-web-scanner-60s tvt-vietqr-auto-billing tvt-smart-concierge-rag tvt-review-booster; do
+    if [ ! -d "services/$repo" ]; then
+        log "Cloning $repo into services/$repo..."
+        git clone --depth 1 --branch main "https://github.com/tvt-ai-max/$repo.git" "services/$repo"
+    else
+        log "Updating services/$repo..."
+        git -C "services/$repo" fetch origin main
+        git -C "services/$repo" reset --hard origin/main
+    fi
+done
+
 if [ ! -f ".env.production" ]; then
     log "ERROR: .env.production not found. Copy from .env.production.example and fill in values."
     log "  cp .env.production.example .env.production"
